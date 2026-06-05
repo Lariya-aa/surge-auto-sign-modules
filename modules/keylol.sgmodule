@@ -1,0 +1,10 @@
+#!name=Keylol 每日登录
+#!desc=Keylol Cookie 抓取、每日访问与积分状态解析
+#!author=Codex
+
+[Script]
+Keylol 抓包 = type=http-request, pattern=^https://keylol\.com/.*, requires-body=0, script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/keylol.js, timeout=10
+Keylol 每日登录 = type=cron, cronexp="20 9 * * *", script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/keylol.js, timeout=60
+
+[MITM]
+hostname = %APPEND% keylol.com

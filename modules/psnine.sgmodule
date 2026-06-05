@@ -1,0 +1,10 @@
+#!name=PSNINE 每日签到
+#!desc=PSNINE Cookie 抓取与每日签到
+#!author=Codex
+
+[Script]
+PSNINE 抓包 = type=http-request, pattern=^https://(www\.)?psnine\.com/.*, requires-body=0, script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/psnine.js, timeout=10
+PSNINE 签到 = type=cron, cronexp="15 9 * * *", script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/psnine.js, timeout=60
+
+[MITM]
+hostname = %APPEND% psnine.com, www.psnine.com
