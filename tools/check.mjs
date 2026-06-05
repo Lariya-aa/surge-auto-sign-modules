@@ -5,6 +5,12 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sites = ["psnine", "linuxdo", "keylol", "gamer"];
+const expectedMitm = {
+  psnine: ["psnine.com", "www.psnine.com"],
+  linuxdo: ["linux.do", "connect.linux.do"],
+  keylol: ["keylol.com"],
+  gamer: ["www.gamer.com.tw", "api.gamer.com.tw", "guild.gamer.com.tw", "ani.gamer.com.tw"]
+};
 const surgeCliCandidates = [
   process.env.SURGE_CLI,
   "/Applications/Surge.app/Contents/Applications/surge-cli",
@@ -65,6 +71,13 @@ for (const site of sites) {
   } catch (error) {
     fail(`${site} dist syntax: ${error.stderr?.toString() || error.message}`);
   }
+
+  const distText = fs.readFileSync(path.join(root, `scripts/dist/${site}.js`), "utf8");
+  if (!/\[MITM\]\s*hostname\s*=\s*%APPEND%/i.test(distText)) fail(`${site} dist missing MITM header`);
+  for (const hostname of expectedMitm[site]) {
+    if (!distText.includes(hostname)) fail(`${site} dist missing MITM hostname: ${hostname}`);
+  }
+  pass(`${site} dist MITM header checked`);
 
   if (surgeCli) {
     try {
