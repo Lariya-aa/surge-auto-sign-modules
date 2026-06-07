@@ -444,7 +444,9 @@ hostname = %APPEND% psnine.com, www.psnine.com
     hosts: ["www.psnine.com", "psnine.com"],
     capture: function(ctx) {
       var cookie = ctx.getCookieFromRequest();
-      return { updated: ctx.saveCookie(cookie), message: "PSNINE Cookie 已保存" };
+      if (!cookie) return { updated: false };
+      var saved = ctx.saveCookie(cookie);
+      return { updated: saved, message: saved ? "PSNINE Cookie 已保存" : "PSNINE Cookie 未变化" };
     },
     checkAuth: function(ctx) {
       return ctx.http.get(ctx.env, "https://www.psnine.com/", ctx.headers(ctx.getCookie()), 1)

@@ -442,7 +442,9 @@ hostname = %APPEND% keylol.com
     hosts: ["keylol.com"],
     capture: function(ctx) {
       var cookie = ctx.getCookieFromRequest();
-      return { updated: ctx.saveCookie(cookie), message: "Keylol Cookie 已保存" };
+      if (!cookie) return { updated: false };
+      var saved = ctx.saveCookie(cookie);
+      return { updated: saved, message: saved ? "Keylol Cookie 已保存" : "Keylol Cookie 未变化" };
     },
     checkAuth: function(ctx) {
       return ctx.http.get(ctx.env, "https://keylol.com/", ctx.headers(ctx.getCookie()), 1)
