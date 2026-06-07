@@ -46,7 +46,6 @@
     var accounts = readAccounts(ctx);
     accounts[account.id] = account;
     ctx.store.writeJSON("accounts", accounts);
-    ctx.saveCookie(account.cookie);
   }
 
   function identifyAccount(ctx, cookie) {
@@ -203,9 +202,11 @@
     usesCredentials: true,
     capture: function(ctx) {
       var cookie = ctx.getCookieFromRequest();
-      if (!cookie) return { updated: false, message: "未找到 Cookie" };
+      if (!cookie) return { updated: false };
       var forcedSlot = captureSlotFromUrl(ctx);
       if (forcedSlot) {
+        var existing = readAccounts(ctx)[forcedSlot];
+        if (existing && existing.cookie === cookie) return { updated: false };
         writeAccount(ctx, {
           id: forcedSlot,
           label: forcedSlot,
@@ -215,7 +216,12 @@
         });
         return { updated: true, message: "Linux.do Cookie 已保存到固定账号槽：" + forcedSlot };
       }
+      var accounts = readAccounts(ctx);
+      var accountKeys = Object.keys(accounts);
+      if (accountKeys.length === 1 && accounts[accountKeys[0]].cookie === cookie) return { updated: false };
       return identifyAccount(ctx, cookie).then(function(info) {
+        var existingAccount = accounts[info.id];
+        if (existingAccount && existingAccount.cookie === cookie) return { updated: false };
         writeAccount(ctx, {
           id: info.id,
           label: info.label,
@@ -237,6 +243,7 @@
             ok: valid.length > 0,
             accounts: valid,
             allAccounts: results,
+            cookie: valid.length ? valid[0].cookie : "",
             message: valid.length ? "账号 A 登录态有效" : "账号 A Cookie 失效"
           };
         });
@@ -246,6 +253,7 @@
         ok: true,
         accounts: auth.accounts || [],
         allAccounts: auth.allAccounts || [],
+        cookie: auth.cookie || "",
         message: "Linux.do 账号 A 登录态检测完成；不执行点赞"
       };
     },

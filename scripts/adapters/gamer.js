@@ -45,7 +45,9 @@
     usesCredentials: true,
     capture: function(ctx) {
       var cookie = ctx.getCookieFromRequest();
-      return { updated: ctx.saveCookie(cookie), message: "Bahamut Cookie 已保存；账号密码可通过 BoxJs/持久化配置设置" };
+      if (!cookie) return { updated: false };
+      var saved = ctx.saveCookie(cookie);
+      return { updated: saved, message: saved ? "Bahamut Cookie 已保存" : "Bahamut Cookie 未变化" };
     },
     checkAuth: function(ctx) {
       var uid = getConfig(ctx, "uid", "");

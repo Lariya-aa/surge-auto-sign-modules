@@ -339,7 +339,14 @@ hostname = %APPEND% www.gamer.com.tw, api.gamer.com.tw, guild.gamer.com.tw, ani.
       safety: core.safety,
       sleep: core.sleep,
       getCookieFromRequest: function() { return getCookieFromRequest(env); },
-      getCookie: function() { return store.read("cookie") || ""; },
+      getCookie: function() {
+        if (typeof store.readJSON === "function") {
+          var accounts = store.readJSON("accounts", {});
+          var keys = Object.keys(accounts || {});
+          if (keys.length) return accounts[keys[0]].cookie || "";
+        }
+        return store.read("cookie") || "";
+      },
       saveCookie: function(cookie) {
         if (!cookie) return false;
         var old = store.read("cookie") || "";
@@ -464,7 +471,9 @@ hostname = %APPEND% www.gamer.com.tw, api.gamer.com.tw, guild.gamer.com.tw, ani.
     usesCredentials: true,
     capture: function(ctx) {
       var cookie = ctx.getCookieFromRequest();
-      return { updated: ctx.saveCookie(cookie), message: "Bahamut Cookie 已保存；账号密码可通过 BoxJs/持久化配置设置" };
+      if (!cookie) return { updated: false };
+      var saved = ctx.saveCookie(cookie);
+      return { updated: saved, message: saved ? "Bahamut Cookie 已保存" : "Bahamut Cookie 未变化" };
     },
     checkAuth: function(ctx) {
       var uid = getConfig(ctx, "uid", "");

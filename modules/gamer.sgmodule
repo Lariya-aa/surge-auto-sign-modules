@@ -3,7 +3,7 @@
 #!author=Codex
 
 [Script]
-Bahamut 抓包 = type=http-request, pattern=^https://(www|api|guild|ani)\.gamer\.com\.tw/.*, requires-body=0, script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/gamer.js, timeout=10
+Bahamut 抓包 = type=http-request, pattern=^https://(www|api)\.gamer\.com\.tw/(mobile_app/user/v3/login|ajax/login|signin|user/.+).*, requires-body=0, script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/gamer.js, timeout=10
 Bahamut 每日任务 = type=cron, cronexp="0 8 * * *", script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/gamer.js, timeout=300
 
 [MITM]

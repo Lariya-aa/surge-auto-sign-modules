@@ -339,7 +339,14 @@ hostname = %APPEND% keylol.com
       safety: core.safety,
       sleep: core.sleep,
       getCookieFromRequest: function() { return getCookieFromRequest(env); },
-      getCookie: function() { return store.read("cookie") || ""; },
+      getCookie: function() {
+        if (typeof store.readJSON === "function") {
+          var accounts = store.readJSON("accounts", {});
+          var keys = Object.keys(accounts || {});
+          if (keys.length) return accounts[keys[0]].cookie || "";
+        }
+        return store.read("cookie") || "";
+      },
       saveCookie: function(cookie) {
         if (!cookie) return false;
         var old = store.read("cookie") || "";

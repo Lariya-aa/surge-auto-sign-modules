@@ -6,7 +6,8 @@ const vm = require("node:vm");
 const root = path.resolve(__dirname, "..");
 const script = fs.readFileSync(path.join(root, "scripts/dist/linuxdo.js"), "utf8");
 
-async function runCapture(store, slot, cookie) {
+async function runCapture(store, url, cookie) {
+  let notifications = [];
   let doneValue = null;
   const done = new Promise((resolve) => {
     const context = {
@@ -22,7 +23,7 @@ async function runCapture(store, slot, cookie) {
       Array,
       RegExp,
       $request: {
-        url: `https://linux.do/?autosign_account=${slot}`,
+        url: url,
         headers: {
           Cookie: cookie
         }
@@ -37,7 +38,9 @@ async function runCapture(store, slot, cookie) {
         }
       },
       $notification: {
-        post() {}
+        post(title, subtitle, body) {
+          notifications.push({ title, subtitle, body });
+        }
       },
       $httpClient: {
         get(_opts, callback) {
@@ -57,29 +60,101 @@ async function runCapture(store, slot, cookie) {
     vm.runInContext(script, context, { filename: "scripts/dist/linuxdo.js" });
   });
   await done;
-  return doneValue;
+  return { doneValue, notifications };
+}
+
+function parseAccounts(store) {
+  return JSON.parse(store["AutoSign.linuxdo.accounts"] || "{}");
 }
 
 (async () => {
-  const store = {};
+  // Test 1: Forced slot capture saves to accounts map
+  console.log("Test 1: Forced slot capture");
+  {
+    const store = {};
+    const { notifications } = await runCapture(store, "https://linux.do/?autosign_account=A", "_t=token-a; _forum_session=session-a");
+    const accounts = parseAccounts(store);
+    assert.equal(accounts.A.id, "A");
+    assert.equal(accounts.A.cookie, "_t=token-a; _forum_session=session-a");
+    assert.equal(accounts.A.source, "forced-url-slot");
+    assert.ok(notifications.length > 0, "should notify on first capture");
+    // Default key should NOT be written (multi-account protection)
+    assert.equal(store["AutoSign.linuxdo.cookie"], undefined);
+    console.log("  PASS: Account A saved to accounts map, notification sent");
+  }
 
-  await runCapture(store, "A", "_t=token-a; _forum_session=session-a");
-  await runCapture(store, "B", "_t=token-b; _forum_session=session-b");
+  // Test 2: Same cookie to same slot → no notification
+  console.log("Test 2: Same cookie, same slot");
+  {
+    const store = {};
+    await runCapture(store, "https://linux.do/?autosign_account=A", "_t=token-a; _forum_session=session-a");
+    const { notifications } = await runCapture(store, "https://linux.do/?autosign_account=A", "_t=token-a; _forum_session=session-a");
+    assert.equal(notifications.length, 0, "should NOT notify for duplicate cookie");
+    console.log("  PASS: No notification for duplicate cookie");
+  }
 
-  const accounts = JSON.parse(store["AutoSign.linuxdo.accounts"]);
-  assert.equal(accounts.A.id, "A");
-  assert.equal(accounts.A.label, "A");
-  assert.equal(accounts.A.cookie, "_t=token-a; _forum_session=session-a");
-  assert.equal(accounts.A.source, "forced-url-slot");
+  // Test 3: Different cookie to same slot → notification
+  console.log("Test 3: Different cookie, same slot");
+  {
+    const store = {};
+    await runCapture(store, "https://linux.do/?autosign_account=A", "_t=token-a; _forum_session=session-a");
+    const { notifications } = await runCapture(store, "https://linux.do/?autosign_account=A", "_t=token-a-new; _forum_session=session-a-new");
+    assert.ok(notifications.length > 0, "should notify for changed cookie");
+    const accounts = parseAccounts(store);
+    assert.equal(accounts.A.cookie, "_t=token-a-new; _forum_session=session-a-new");
+    console.log("  PASS: Updated cookie for existing slot, notification sent");
+  }
 
-  assert.equal(accounts.B.id, "B");
-  assert.equal(accounts.B.label, "B");
-  assert.equal(accounts.B.cookie, "_t=token-b; _forum_session=session-b");
-  assert.equal(accounts.B.source, "forced-url-slot");
+  // Test 4: Two different slots are independent
+  console.log("Test 4: Two independent slots");
+  {
+    const store = {};
+    await runCapture(store, "https://linux.do/?autosign_account=A", "_t=token-a; _forum_session=session-a");
+    await runCapture(store, "https://linux.do/?autosign_account=B", "_t=token-b; _forum_session=session-b");
+    const accounts = parseAccounts(store);
+    assert.equal(accounts.A.cookie, "_t=token-a; _forum_session=session-a");
+    assert.equal(accounts.B.cookie, "_t=token-b; _forum_session=session-b");
+    console.log("  PASS: Accounts A and B stored independently");
+  }
 
-  assert.equal(store["AutoSign.linuxdo.cookie"], "_t=token-b; _forum_session=session-b");
+  // Test 5: Normal browsing (no slot param) doesn't overwrite named accounts
+  console.log("Test 5: Normal browsing doesn't overwrite named accounts");
+  {
+    const store = {};
+    // First capture account A via forced slot
+    await runCapture(store, "https://linux.do/?autosign_account=A", "_t=token-a; _forum_session=session-a");
+    // Simulate normal browsing with account B's cookie (no slot param)
+    await runCapture(store, "https://linux.do/", "_t=token-b; _forum_session=session-b");
+    const accounts = parseAccounts(store);
+    // Account A should still be intact
+    assert.equal(accounts.A.cookie, "_t=token-a; _forum_session=session-a");
+    // Default key should NOT be overwritten
+    assert.equal(store["AutoSign.linuxdo.cookie"], undefined);
+    console.log("  PASS: Account A preserved after normal browsing");
+  }
 
-  console.log("linuxdo capture tests passed");
+  // Test 6: Cookie available in accounts map for sign flow
+  console.log("Test 6: Cookie in accounts map");
+  {
+    const store = {};
+    await runCapture(store, "https://linux.do/?autosign_account=A", "_t=token-a; _forum_session=session-a");
+    const accounts = parseAccounts(store);
+    assert.ok(accounts.A.cookie.includes("token-a"));
+    console.log("  PASS: Cookie available in accounts map");
+  }
+
+  // Test 7: Empty cookie returns false
+  console.log("Test 7: Empty cookie");
+  {
+    const store = {};
+    const { notifications } = await runCapture(store, "https://linux.do/?autosign_account=A", "");
+    assert.equal(notifications.length, 0, "should NOT notify for empty cookie");
+    const accounts = parseAccounts(store);
+    assert.deepEqual(accounts, {});
+    console.log("  PASS: Empty cookie ignored");
+  }
+
+  console.log("All linuxdo capture tests passed");
 })().catch((error) => {
   console.error(error);
   process.exit(1);

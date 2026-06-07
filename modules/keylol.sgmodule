@@ -3,7 +3,7 @@
 #!author=Codex
 
 [Script]
-Keylol 抓包 = type=http-request, pattern=^https://keylol\.com/.*, requires-body=0, script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/keylol.js, timeout=10
+Keylol 抓包 = type=http-request, pattern=^https://keylol\.com/(member\.php|home\.php\?mod=space).*, requires-body=0, script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/keylol.js, timeout=10
 Keylol 每日登录 = type=cron, cronexp="20 9 * * *", script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/keylol.js, timeout=60
 
 [MITM]
