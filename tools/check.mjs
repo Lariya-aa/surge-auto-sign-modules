@@ -90,6 +90,16 @@ for (const site of sites) {
 }
 
 const linuxdoDist = fs.readFileSync(path.join(root, "scripts/dist/linuxdo.js"), "utf8");
+const linuxdoModule = fs.readFileSync(path.join(root, "modules/linuxdo.sgmodule"), "utf8");
+const linuxdoCaptureLine = linuxdoModule.split(/\r?\n/).find((line) => line.startsWith("Linux.do 抓包 =")) || "";
+const linuxdoCapturePattern = (linuxdoCaptureLine.match(/pattern=([^,]+),/) || [])[1] || "";
+if (!linuxdoCapturePattern) fail("linuxdo module capture pattern missing");
+else {
+  const pattern = new RegExp(linuxdoCapturePattern);
+  if (!pattern.test("https://linux.do/?autosign_account=A")) fail("linuxdo capture pattern does not match documented account-A binding URL");
+  if (pattern.test("https://linux.do/latest.json")) fail("linuxdo capture pattern is too broad and matches latest.json browsing API");
+  pass("linuxdo capture pattern checked");
+}
 const forbidden = [
   /\/posts(?:\.json)?\b/i,
   /\breply\b/i,

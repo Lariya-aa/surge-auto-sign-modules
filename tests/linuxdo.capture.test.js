@@ -5,6 +5,15 @@ const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
 const script = fs.readFileSync(path.join(root, "scripts/dist/linuxdo.js"), "utf8");
+const moduleText = fs.readFileSync(path.join(root, "modules/linuxdo.sgmodule"), "utf8");
+
+function linuxdoCapturePattern() {
+  const line = moduleText.split(/\r?\n/).find((row) => row.startsWith("Linux.do 抓包 ="));
+  assert.ok(line, "Linux.do capture script line should exist");
+  const match = line.match(/pattern=([^,]+),/);
+  assert.ok(match, "Linux.do capture line should include a pattern");
+  return new RegExp(match[1]);
+}
 
 async function runCapture(store, url, cookie) {
   let notifications = [];
@@ -68,6 +77,16 @@ function parseAccounts(store) {
 }
 
 (async () => {
+  // Test 0: Surge module pattern must route the documented slot-binding URL to the script.
+  console.log("Test 0: Module pattern matches slot-binding URL");
+  {
+    const pattern = linuxdoCapturePattern();
+    assert.equal(pattern.test("https://linux.do/?autosign_account=A"), true);
+    assert.equal(pattern.test("https://linux.do/session/current.json"), true);
+    assert.equal(pattern.test("https://linux.do/latest.json"), false);
+    console.log("  PASS: Module routes slot binding and auth pages without capturing latest.json");
+  }
+
   // Test 1: Forced slot capture saves to accounts map
   console.log("Test 1: Forced slot capture");
   {

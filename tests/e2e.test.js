@@ -5,6 +5,18 @@ const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
 const script = fs.readFileSync(path.join(root, "scripts/dist/linuxdo.js"), "utf8");
+const RealDate = Date;
+
+class FixedDate extends RealDate {
+  constructor(...args) {
+    if (args.length) return new RealDate(...args);
+    return new RealDate("2026-06-09T12:00:00+08:00");
+  }
+
+  static now() {
+    return new RealDate("2026-06-09T12:00:00+08:00").getTime();
+  }
+}
 
 function createSurrogate(store) {
   return {
@@ -17,7 +29,7 @@ async function runCapture(store, url, cookie) {
   let notifications = [];
   await new Promise((resolve) => {
     const context = {
-      console, setTimeout, Promise, Math, Date, String, Number, JSON, Object, Array, RegExp,
+      console, setTimeout, Promise, Math, Date: FixedDate, String, Number, JSON, Object, Array, RegExp,
       $request: { url, headers: { Cookie: cookie } },
       $persistentStore: createSurrogate(store),
       $notification: { post(t, s, b) { notifications.push({ t, s, b }); } },
@@ -40,7 +52,7 @@ async function runCron(store, httpMocks) {
   let notifications = [];
   await new Promise((resolve) => {
     const context = {
-      console, setTimeout, Promise, Math, Date, String, Number, JSON, Object, Array, RegExp,
+      console, setTimeout, Promise, Math, Date: FixedDate, String, Number, JSON, Object, Array, RegExp,
       $persistentStore: createSurrogate(store),
       $notification: { post(t, s, b) { notifications.push({ t, s, b }); } },
       $httpClient: httpMocks || {
