@@ -430,12 +430,13 @@ hostname = %APPEND% psnine.com, www.psnine.com
   function findSignUrl(html) {
     var links = core.parser.links(html, "https://www.psnine.com");
     for (var i = 0; i < links.length; i++) {
-      var joined = links[i].href + " " + links[i].text;
-      if (/签到|簽到|sign/i.test(joined) && /\/(sign|qiandao|check|daily|ajax|user)/i.test(links[i].href)) {
-        return links[i].href;
+      var text = links[i].text || "";
+      var href = links[i].href || "";
+      if (/签到|簽到/i.test(text) && /\/(sign|qiandao|check|daily|ajax|user)/i.test(href) && !/\/(sign\/(?:out|in)|logout)/i.test(href)) {
+        return href;
       }
     }
-    return core.parser.firstMatch(html, /["']([^"']*(?:sign|qiandao|checkin|daily)[^"']*)["']/i);
+    return core.parser.firstMatch(html, /["']([^"']*(?:qiandao|checkin|daily)[^"']*)["']/i);
   }
 
   var site = {
