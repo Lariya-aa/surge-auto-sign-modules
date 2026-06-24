@@ -480,10 +480,14 @@ hostname = %APPEND% psnine.com, www.psnine.com
 
       return ctx.http.get(ctx.env, signUrl, headers, 1).then(function(resp) {
         var text = resp.body || "";
-        if (resp.statusCode >= 400) return { ok: false, message: "签到请求状态码 " + resp.statusCode };
+        if (/今天已经签过了|今天已经簽過了|已经祈祷|已經祈禱|重复|重複/i.test(text)) {
+          var days = ctx.parser.firstMatch(text, /你已祈祷\s*<b[^>]*>(\d+)<\/b>\s*天了?/i) || ctx.parser.firstMatch(text, /(\d+)\s*天/);
+          return { ok: true, already: true, message: days ? "今日已祈祷，累计 " + days + " 天" : "今日已祈祷" };
+        }
         if (/失败|错误|error|未登录|請先|请先|登录|登入/i.test(text)) {
           return { ok: false, message: ctx.parser.firstMatch(text, /(?:msg|message)["']?\s*[:=]\s*["']([^"']+)/i, "签到返回失败") };
         }
+        if (resp.statusCode >= 400) return { ok: false, message: "签到请求状态码 " + resp.statusCode };
         var coin = ctx.parser.firstMatch(text, /(\d+)\s*(?:铜币|銅幣)/i);
         var days = ctx.parser.firstMatch(text, /你已祈祷\s*<b[^>]*>(\d+)<\/b>\s*天了?/i);
         if (coin) {
