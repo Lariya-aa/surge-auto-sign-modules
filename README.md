@@ -42,14 +42,12 @@ Surge starts the task at the beginning of each window. The script then waits for
 3. Log in to the target website and open a matching page to capture cookies.
 4. Wait for the cron task or run the script manually in Surge.
 
-Self-hosted GitLab module URLs:
+Module URLs:
 
-- PSNINE: `http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/modules/psnine.sgmodule`
-- Keylol: `http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/modules/keylol.sgmodule`
-- Linux.do: `http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/modules/linuxdo.sgmodule`
-- Bahamut: `http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/modules/gamer.sgmodule`
-
-The local URL server is only an optional development path before uploading. For local Surge setup, testing flow, and pre-GitLab checks, see [docs/LOCAL_SURGE_SETUP.md](docs/LOCAL_SURGE_SETUP.md).
+- PSNINE: `https://raw.githubusercontent.com/Lariya-aa/surge-auto-sign-modules/main/modules/psnine.sgmodule`
+- Keylol: `https://raw.githubusercontent.com/Lariya-aa/surge-auto-sign-modules/main/modules/keylol.sgmodule`
+- Linux.do: `https://raw.githubusercontent.com/Lariya-aa/surge-auto-sign-modules/main/modules/linuxdo.sgmodule`
+- Bahamut: `https://raw.githubusercontent.com/Lariya-aa/surge-auto-sign-modules/main/modules/gamer.sgmodule`
 
 For Bahamut credential-based login, configure these persistent keys:
 

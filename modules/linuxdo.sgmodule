@@ -3,11 +3,11 @@
 #!author=Codex
 
 [Script]
-Linux.do 抓包 = type=http-request, pattern=^https://(connect\.)?linux\.do/(?:\?(?:.*&)?(?:autosign_account|autosign_slot|account|slot)=|session|my|admin|api/session|u/).*, requires-body=0, script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/linuxdo.js, timeout=10
-Linux.do 工作日上午浏览 = type=cron, cronexp="0 9 * * 1-5", script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/linuxdo.js, timeout=3700
-Linux.do 工作日午间浏览 = type=cron, cronexp="0 13 * * 1-5", script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/linuxdo.js, timeout=7300
-Linux.do 工作日傍晚浏览 = type=cron, cronexp="0 17 * * 1-5", script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/linuxdo.js, timeout=3700
-Linux.do 周末晚间浏览 = type=cron, cronexp="30 20 * * 0,6", script-path=http://192.168.3.11:5580/yara/surge-auto-sign-modules/-/raw/main/scripts/dist/linuxdo.js, timeout=5500
+Linux.do 抓包 = type=http-request, pattern=^https://(connect\.)?linux\.do/(?:\?(?:.*&)?(?:autosign_account|autosign_slot|account|slot)=|session|my|admin|api/session|u/).*, requires-body=0, script-path=https://raw.githubusercontent.com/Lariya-aa/surge-auto-sign-modules/main/scripts/dist/linuxdo.js, timeout=10
+Linux.do 工作日上午浏览 = type=cron, cronexp="0 9 * * 1-5", script-path=https://raw.githubusercontent.com/Lariya-aa/surge-auto-sign-modules/main/scripts/dist/linuxdo.js, timeout=3700
+Linux.do 工作日午间浏览 = type=cron, cronexp="0 13 * * 1-5", script-path=https://raw.githubusercontent.com/Lariya-aa/surge-auto-sign-modules/main/scripts/dist/linuxdo.js, timeout=7300
+Linux.do 工作日傍晚浏览 = type=cron, cronexp="0 17 * * 1-5", script-path=https://raw.githubusercontent.com/Lariya-aa/surge-auto-sign-modules/main/scripts/dist/linuxdo.js, timeout=3700
+Linux.do 周末晚间浏览 = type=cron, cronexp="30 20 * * 0,6", script-path=https://raw.githubusercontent.com/Lariya-aa/surge-auto-sign-modules/main/scripts/dist/linuxdo.js, timeout=5500
 
 [MITM]
 hostname = %APPEND% linux.do, connect.linux.do
