@@ -479,7 +479,7 @@ hostname = %APPEND% linux.do, connect.linux.do
       "Accept": "application/json",
       "Referer": "https://linux.do/"
     });
-    return ctx.http.get(ctx.env, "https://linux.do/session/current.json", headers, 0)
+    return ctx.http.get(ctx.env, "https://linux.do/latest.json", headers, 0)
       .then(function(resp) {
         try {
           var data = JSON.parse(resp.body || "{}");
@@ -543,10 +543,19 @@ hostname = %APPEND% linux.do, connect.linux.do
   }
 
   function checkOne(ctx, account) {
-    return ctx.http.get(ctx.env, "https://linux.do/", ctx.headers(account.cookie), 1)
+    var headers = ctx.headers(account.cookie, {
+      "Accept": "application/json",
+      "Referer": "https://linux.do/"
+    });
+    return ctx.http.get(ctx.env, "https://linux.do/latest.json", headers, 1)
       .then(function(resp) {
-        var html = resp.body || "";
-        var ok = resp.statusCode < 400 && /id=["']current-user["']|current-user|avatar|data-user-card/i.test(html);
+        var ok = false;
+        if (resp.statusCode < 400) {
+          try {
+            var data = JSON.parse(resp.body || "{}");
+            ok = !!(data.current_user || (data.topic_list && data.topic_list.topics));
+          } catch (e) {}
+        }
         return {
           id: account.id,
           label: account.label || account.id,

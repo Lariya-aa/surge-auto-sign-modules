@@ -88,18 +88,17 @@ async function runCron(store, httpMocks) {
     const httpMocks = {
       get(opts, callback) {
         const url = opts.url || "";
-        const cookie = (opts.headers || {}).Cookie || "";
-        if (url === "https://linux.do/") {
-          // checkAuth: return valid login page
+        if (url.includes("latest.json")) {
+          // checkAuth and browse both use latest.json
           callback(null, { status: 200, headers: {} },
-            '<div id="current-user" data-user-card="UserA">avatar</div>');
-        } else if (url.includes("latest.json")) {
-          callback(null, { status: 200, headers: {} },
-            JSON.stringify({ topic_list: { topics: [
-              { id: 101, slug: "topic-1" },
-              { id: 102, slug: "topic-2" },
-              { id: 103, slug: "topic-3" }
-            ] } }));
+            JSON.stringify({
+              current_user: { username: "UserA" },
+              topic_list: { topics: [
+                { id: 101, slug: "topic-1" },
+                { id: 102, slug: "topic-2" },
+                { id: 103, slug: "topic-3" }
+              ] }
+            }));
         } else if (url.includes("/t/")) {
           callback(null, { status: 200, headers: {} }, "<html>topic</html>");
         } else {
@@ -137,13 +136,13 @@ async function runCron(store, httpMocks) {
     let usedCookie = null;
     const httpMocks = {
       get(opts, callback) {
-        if (opts.url === "https://linux.do/") {
+        if (opts.url.includes("latest.json")) {
           usedCookie = (opts.headers || {}).Cookie;
           callback(null, { status: 200, headers: {} },
-            '<div id="current-user">ok</div>');
-        } else if (opts.url.includes("latest.json")) {
-          callback(null, { status: 200, headers: {} },
-            JSON.stringify({ topic_list: { topics: [] } }));
+            JSON.stringify({
+              current_user: { username: "UserA" },
+              topic_list: { topics: [] }
+            }));
         } else {
           callback(null, { status: 200, headers: {} }, "");
         }

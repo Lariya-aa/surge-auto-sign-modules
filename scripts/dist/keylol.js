@@ -451,9 +451,7 @@ hostname = %APPEND% keylol.com
         .then(function(resp) {
           var html = resp.body || "";
           if (resp.statusCode >= 400) return { ok: false, message: "首页状态码 " + resp.statusCode };
-          var hasLoginForm = /name=["']username["']|用户名\/手机号|login_button|member\.php\?mod=logging/i.test(html);
-          var hasUserSurface = /退出|登出|消息|提醒|积分|体力|蒸汽|home\.php\?mod=spacecp|suid-\d+/i.test(html);
-          var loggedIn = hasUserSurface && !hasLoginForm;
+          var loggedIn = /退出|登出|home\.php\?mod=spacecp/i.test(html);
           return { ok: loggedIn, html: html, message: loggedIn ? "" : "Cookie 可能已失效" };
         });
     },

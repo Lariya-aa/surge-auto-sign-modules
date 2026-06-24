@@ -1,5 +1,3 @@
-<!-- memory-vault-managed -->
-
 # Project Knowledge
 
 ## Anyrouter.top Access Constraint
@@ -22,5 +20,3 @@ Decision:
   browser access and optional passive status/cookie capture only.
 - Treat automated requests to this domain as unsafe because they can cause the
   real browser session to be blocked as well.
-
-<!-- memory-vault-managed -->
