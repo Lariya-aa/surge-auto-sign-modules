@@ -1,23 +1,21 @@
 (function(global) {
   var core = global.AutoSignCore;
 
-  var DAILY_SIGN_URL = "https://www.psnine.com/sign/daily";
+  var QIDAO_URL = "https://www.psnine.com/set/qidao/ajax";
 
   function findSignUrl(html) {
     var links = core.parser.links(html, "https://www.psnine.com");
     for (var i = 0; i < links.length; i++) {
       var text = links[i].text || "";
       var href = links[i].href || "";
-      if (/签到|簽到/i.test(text) && /\/(sign|qiandao|check|daily|ajax|user)/i.test(href) && !/\/(sign\/(?:out|in)|logout)/i.test(href)) {
+      if (/[签到簽到]{1,2}/i.test(text) && /\/(sign|qiandao|set|daily|ajax|user)/i.test(href) && !/\/(sign\/(?:out|in)|logout)/i.test(href)) {
         return href;
       }
     }
-    var fallback = core.parser.firstMatch(html, /["']([^"']*(?:qiandao|checkin|daily)[^"']*)["']/i);
-    return fallback || DAILY_SIGN_URL;
-  }
-
-  function isAlreadySignedPage(body) {
-    return /<title>已登录，即将跳转到首页<\/title>/i.test(body || "");
+    if (/onclick=["']\s*qidao\s*\(\s*this\s*\)\s*["']/i.test(html)) {
+      return QIDAO_URL;
+    }
+    return core.parser.firstMatch(html, /["']([^"']*qidao[^"']*)["']/i) || QIDAO_URL;
   }
 
   var site = {
@@ -43,10 +41,6 @@
     },
     sign: function(ctx, auth) {
       var html = auth.html || "";
-      if (/已签到|已簽到|今日.*已.*签|今天.*签/i.test(html)) {
-        return { ok: true, already: true, message: "今日已签到" };
-      }
-
       var signUrl = findSignUrl(html);
       if (!signUrl) {
         return { ok: false, message: "未找到签到入口，可能需要更新 PSNINE adapter" };
@@ -58,33 +52,22 @@
         "X-Requested-With": "XMLHttpRequest"
       });
 
-      function postSign(url, fh) {
-        var body = fh ? "formhash=" + encodeURIComponent(fh) : "";
-        return ctx.http.post(ctx.env, url, headers, body, 1).then(function(resp) {
-          var text = resp.body || "";
-          if (isAlreadySignedPage(text)) {
-            return { ok: true, already: true, message: "今日已签到" };
-          }
-          if (resp.statusCode >= 400) return { ok: false, message: "签到请求状态码 " + resp.statusCode };
-          if (/失败|错误|error|未登录|請先|请先/i.test(text)) {
-            return { ok: false, message: ctx.parser.firstMatch(text, /(?:msg|message)["']?\s*[:=]\s*["']([^"']+)/i, "签到返回失败") };
-          }
-          var coin = ctx.parser.firstMatch(text + html, /(\d+)\s*(?:铜币|銅幣|金币|積分|积分)/i);
-          return { ok: true, message: coin ? "签到完成，当前数值 " + coin : "签到请求完成" };
-        });
-      }
-
-      if (signUrl.indexOf("/sign/daily") >= 0) {
-        return ctx.http.get(ctx.env, signUrl, headers, 1).then(function(resp) {
-          var pageBody = resp.body || "";
-          if (isAlreadySignedPage(pageBody)) {
-            return { ok: true, already: true, message: "今日已签到" };
-          }
-          return postSign(signUrl, ctx.parser.formhash(pageBody) || ctx.parser.formhash(html));
-        });
-      }
-
-      return postSign(signUrl, ctx.parser.formhash(html));
+      return ctx.http.get(ctx.env, signUrl, headers, 1).then(function(resp) {
+        var text = resp.body || "";
+        if (resp.statusCode >= 400) return { ok: false, message: "签到请求状态码 " + resp.statusCode };
+        if (/失败|错误|error|未登录|請先|请先|登录|登入/i.test(text)) {
+          return { ok: false, message: ctx.parser.firstMatch(text, /(?:msg|message)["']?\s*[:=]\s*["']([^"']+)/i, "签到返回失败") };
+        }
+        var coin = ctx.parser.firstMatch(text, /(\d+)\s*(?:铜币|銅幣)/i);
+        var days = ctx.parser.firstMatch(text, /你已祈祷\s*<b[^>]*>(\d+)<\/b>\s*天了?/i);
+        if (coin) {
+          return { ok: true, message: "祈祷成功，获得 " + coin + " 铜币" + (days ? "（连续 " + days + " 天）" : "") };
+        }
+        if (days) {
+          return { ok: true, already: true, message: "今日已祈祷，累计 " + days + " 天" };
+        }
+        return { ok: true, message: "签到请求完成" };
+      });
     },
     summarize: function(ctx, result) {
       var sign = result.sign || {};
