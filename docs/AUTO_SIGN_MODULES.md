@@ -23,7 +23,7 @@
 
 ## 站点状态
 
-- PSNINE：通过 Cookie 访问首页，解析签到链接或 token。若站点页面结构变化，会明确通知“未找到签到入口”。
+- PSNINE：通过 Cookie 访问首页，定位右下角蓝色“签”按钮（`onclick="qidao(this);"`），调用 `GET https://www.psnine.com/set/qidao/ajax` 完成“祈祷”签到。该接口在已签到时会返回 HTTP 404 且响应体为“今天已经签过了”，脚本已将其识别为“今日已祈祷”状态，不会误报失败或触发登出。
 - Keylol：通过 Cookie 做每日访问，读取积分/体力/蒸汽信息；没有伪造发帖行为。
 - Linux.do：当前只保留 Chrome/Profile A 的账号 A 用于测试。脚本做登录态检测、读取 `latest.json`、按时间窗口随机浏览不同主题；不发帖、不回复、不点赞。账号 A 绑定方式：在 Chrome/Profile A 访问 `https://linux.do/?autosign_account=A`。浏览窗口：工作日 09:00-10:00 浏览 10 个、13:00-15:00 浏览 15 个、17:00-18:00 浏览 10 个；周末 20:30-22:00 浏览 10 个。
 - Bahamut：封装 NobyDa 脚本思路，支持登录、CSRF 签到、公会签到、动画疯答题。账号密码可写入持久化配置：
