@@ -441,7 +441,9 @@ hostname = %APPEND% psnine.com, www.psnine.com
     if (/onclick=["']\s*qidao\s*\(\s*this\s*\)\s*["']/i.test(html)) {
       return QIDAO_URL;
     }
-    return core.parser.firstMatch(html, /["']([^"']*qidao[^"']*)["']/i) || QIDAO_URL;
+    var fallback = core.parser.firstMatch(html, /["']([^"']*qidao[^"']*)["']/i);
+    if (fallback && fallback.indexOf("(") === -1) return fallback;
+    return QIDAO_URL;
   }
 
   var site = {
