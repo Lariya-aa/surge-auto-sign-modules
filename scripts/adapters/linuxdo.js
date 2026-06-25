@@ -242,9 +242,10 @@
     },
     checkAuth: function(ctx) {
       var accountsMap = readAccounts(ctx);
-      var account = accountsMap.A || accountsMap.default;
+      var keys = Object.keys(accountsMap);
+      var account = accountsMap.A || accountsMap[keys[0]];
       var accounts = account ? [account] : [];
-      if (!accounts.length) return { ok: false, message: "未保存 Linux.do 账号 A Cookie。请在 Chrome A 访问 https://linux.do/?autosign_account=A" };
+      if (!accounts.length) return { ok: false, message: "未保存 Linux.do Cookie。请在 Chrome 访问 https://linux.do/?autosign_account=A" };
       return each(accounts, function(account) { return checkOne(ctx, account); })
         .then(function(results) {
           var valid = results.filter(function(r) { return r.ok; });
