@@ -472,8 +472,10 @@ hostname = %APPEND% www.gamer.com.tw, api.gamer.com.tw, guild.gamer.com.tw, ani.
     capture: function(ctx) {
       var cookie = ctx.getCookieFromRequest();
       if (!cookie) return { updated: false };
-      var saved = ctx.saveCookie(cookie);
-      return { updated: saved, message: saved ? "Bahamut Cookie 已保存" : "Bahamut Cookie 未变化" };
+      var existing = ctx.getCookie();
+      if (existing) return { updated: false };
+      ctx.saveCookie(cookie);
+      return { updated: true, message: "Bahamut Cookie 已保存" };
     },
     checkAuth: function(ctx) {
       var uid = getConfig(ctx, "uid", "");

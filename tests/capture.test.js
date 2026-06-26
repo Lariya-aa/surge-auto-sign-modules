@@ -77,16 +77,16 @@ async function loadScript(filename, store, requestUrl, requestCookie) {
     console.log("  PASS: gamer.js no popup for same cookie");
   }
 
-  // Test gamer.js capture: different cookie triggers update
-  console.log("Test: gamer.js capture with different cookie");
+  // Test gamer.js capture: existing cookie → no overwrite
+  console.log("Test: gamer.js capture with existing cookie");
   {
     const store = {};
     store["AutoSign.gamer.cookie"] = "OLD_COOKIE";
     const r = await loadScript("scripts/dist/gamer.js", store,
       "https://www.gamer.com.tw/user/profile", "NEW_COOKIE");
-    assert.ok(r.notifications.length > 0, "different cookie should notify");
-    assert.equal(store["AutoSign.gamer.cookie"], "NEW_COOKIE");
-    console.log("  PASS: gamer.js updated for different cookie");
+    assert.equal(r.notifications.length, 0, "existing cookie should NOT be overwritten");
+    assert.equal(store["AutoSign.gamer.cookie"], "OLD_COOKIE");
+    console.log("  PASS: gamer.js preserves existing cookie");
   }
 
   // Test gamer.js capture: empty cookie → no notification
